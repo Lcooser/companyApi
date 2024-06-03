@@ -1,12 +1,15 @@
 package com.infnet.companyApi.controller;
 
-
 import com.infnet.companyApi.dto.CompanyDto;
 import com.infnet.companyApi.service.CompanyService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.UUID;
 
 @RestController
@@ -14,30 +17,55 @@ import java.util.UUID;
 public class CompanyController {
 
     @Autowired
-    CompanyService companyService;
+    private CompanyService companyService;
 
     @GetMapping
-    public List<CompanyDto> getAllCompany() {
-        return companyService.getAllCompanies();
+    public ResponseEntity<List<CompanyDto>> getAllCompany() {
+        List<CompanyDto> companies = companyService.getAllCompanies();
+        return ResponseEntity.ok(companies);
     }
+
     @GetMapping("/{id}")
-    public CompanyDto getCompanyById(@PathVariable UUID id) {
-        return companyService.getCompanyById(id);
+    public ResponseEntity<CompanyDto> getCompanyById(@PathVariable UUID id) {
+        try {
+            CompanyDto companyDto = companyService.getCompanyById(id);
+            return ResponseEntity.ok(companyDto);
+        } catch (NoSuchElementException ex) {
+            return ResponseEntity.notFound().build();
+        }
     }
 
     @PostMapping
-    public CompanyDto createCompany(@RequestBody CompanyDto companyDto) {
-        return companyService.createCompany(companyDto);
+    public ResponseEntity<CompanyDto> createCompany(@Valid @RequestBody CompanyDto companyDto, BindingResult bindingResult) {
+        if (bindingResult.hasErrors()) {
+            return ResponseEntity.badRequest().body(null);
+        }
+
+        CompanyDto createdCompany = companyService.createCompany(companyDto);
+        return ResponseEntity.ok(createdCompany);
     }
 
     @PutMapping("/{id}")
-    public CompanyDto updateCompany(@PathVariable UUID id, @RequestBody CompanyDto companyDto) {
-        return companyService.updateCompany(id, companyDto);
+    public ResponseEntity<CompanyDto> updateCompany(@PathVariable UUID id, @Valid @RequestBody CompanyDto companyDto, BindingResult bindingResult) {
+        if (bindingResult.hasErrors()) {
+            return ResponseEntity.badRequest().body(null);
+        }
+
+        try {
+            CompanyDto updatedCompany = companyService.updateCompany(id, companyDto);
+            return ResponseEntity.ok(updatedCompany);
+        } catch (NoSuchElementException ex) {
+            return ResponseEntity.notFound().build();
+        }
     }
 
     @DeleteMapping("/{id}")
-    public void deleteCompany(@PathVariable UUID id) {
-        companyService.deleteCompany(id);
+    public ResponseEntity<Void> deleteCompany(@PathVariable UUID id) {
+        try {
+            companyService.deleteCompany(id);
+            return ResponseEntity.noContent().build();
+        } catch (NoSuchElementException ex) {
+            return ResponseEntity.notFound().build();
+        }
     }
-
 }

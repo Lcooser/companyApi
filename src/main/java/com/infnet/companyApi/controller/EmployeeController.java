@@ -1,12 +1,15 @@
 package com.infnet.companyApi.controller;
 
-
 import com.infnet.companyApi.dto.EmployeeDto;
 import com.infnet.companyApi.service.EmployeeService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.UUID;
 
 @RestController
@@ -17,29 +20,52 @@ public class EmployeeController {
     private EmployeeService employeeService;
 
     @GetMapping
-    public List<EmployeeDto> getAllEmployees() {
-        return employeeService.getAllEmployees();
+    public ResponseEntity<List<EmployeeDto>> getAllEmployees() {
+        List<EmployeeDto> employees = employeeService.getAllEmployees();
+        return ResponseEntity.ok(employees);
     }
 
     @GetMapping("/{id}")
-    public EmployeeDto getEmployeeById(@PathVariable UUID id) {
-        return employeeService.getEmployeeById(id);
+    public ResponseEntity<EmployeeDto> getEmployeeById(@PathVariable UUID id) {
+        try {
+            EmployeeDto employeeDto = employeeService.getEmployeeById(id);
+            return ResponseEntity.ok(employeeDto);
+        } catch (NoSuchElementException ex) {
+            return ResponseEntity.notFound().build();
+        }
     }
 
     @PostMapping
-    public EmployeeDto createEmployee(@RequestBody EmployeeDto employeeDto) {
-        return employeeService.createEmployee(employeeDto);
+    public ResponseEntity<EmployeeDto> createEmployee(@Valid @RequestBody EmployeeDto employeeDto, BindingResult bindingResult) {
+        if (bindingResult.hasErrors()) {
+            return ResponseEntity.badRequest().body(null);
+        }
+
+        EmployeeDto createdEmployee = employeeService.createEmployee(employeeDto);
+        return ResponseEntity.ok(createdEmployee);
     }
 
     @PutMapping("/{id}")
-    public EmployeeDto updateEmployee(@PathVariable UUID id, @RequestBody EmployeeDto employeeDto) {
-        return employeeService.updateEmployee(id, employeeDto);
+    public ResponseEntity<EmployeeDto> updateEmployee(@PathVariable UUID id, @Valid @RequestBody EmployeeDto employeeDto, BindingResult bindingResult) {
+        if (bindingResult.hasErrors()) {
+            return ResponseEntity.badRequest().body(null);
+        }
+
+        try {
+            EmployeeDto updatedEmployee = employeeService.updateEmployee(id, employeeDto);
+            return ResponseEntity.ok(updatedEmployee);
+        } catch (NoSuchElementException ex) {
+            return ResponseEntity.notFound().build();
+        }
     }
 
     @DeleteMapping("/{id}")
-    public void deleteEmployee(@PathVariable UUID id) {
-        employeeService.deleteEmployee(id);
+    public ResponseEntity<Void> deleteEmployee(@PathVariable UUID id) {
+        try {
+            employeeService.deleteEmployee(id);
+            return ResponseEntity.noContent().build();
+        } catch (NoSuchElementException ex) {
+            return ResponseEntity.notFound().build();
+        }
     }
-
-
 }
