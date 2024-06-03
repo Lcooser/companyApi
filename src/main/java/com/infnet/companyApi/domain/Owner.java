@@ -29,7 +29,12 @@ public class Owner {
     private String gender;
     private float salary;
 
-    @ManyToMany(mappedBy = "owners")
+    @ManyToMany
+    @JoinTable(
+            name = "company_owner",
+            joinColumns = @JoinColumn(name = "owner_id"),
+            inverseJoinColumns = @JoinColumn(name = "company_id")
+    )
     private List<Company> companies;
 
 }

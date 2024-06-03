@@ -30,7 +30,7 @@ public class CompanyController {
         return companyService.createCompany(companyDto);
     }
 
-    @PostMapping("/{id}")
+    @PutMapping("/{id}")
     public CompanyDto updateCompany(@PathVariable UUID id, @RequestBody CompanyDto companyDto) {
         return companyService.updateCompany(id, companyDto);
     }

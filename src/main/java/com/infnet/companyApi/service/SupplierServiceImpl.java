@@ -4,7 +4,11 @@ import com.infnet.companyApi.domain.Supplier;
 import com.infnet.companyApi.dto.SupplierDto;
 import com.infnet.companyApi.repository.SupplierRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.EmptyResultDataAccessException;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 
 import java.util.List;
@@ -41,24 +45,32 @@ public class SupplierServiceImpl implements SupplierService {
 
     @Override
     public SupplierDto updateSupplier(UUID id, SupplierDto supplierDto) {
-        Supplier existingSupplier = supplierRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Supplier not found with id: " + id));
-        existingSupplier.setName(supplierDto.getName());
-        existingSupplier.setAddress(supplierDto.getAddress());
-        existingSupplier.setPhone(supplierDto.getPhone());
-        existingSupplier.setEmail(supplierDto.getEmail());
-        existingSupplier.setStartOfContract(supplierDto.getStartOfContract());
-        existingSupplier.setEndOfContract(supplierDto.getEndOfContract());
-        existingSupplier.setCategory(supplierDto.getCategory());
-        existingSupplier.setCnpj(String.valueOf(supplierDto.getCnpj()));
+        try {
+            Supplier existingSupplier = supplierRepository.findById(id)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Supplier not found with id: " + id));
+            existingSupplier.setName(supplierDto.getName());
+            existingSupplier.setAddress(supplierDto.getAddress());
+            existingSupplier.setPhone(supplierDto.getPhone());
+            existingSupplier.setEmail(supplierDto.getEmail());
+            existingSupplier.setStartOfContract(supplierDto.getStartOfContract());
+            existingSupplier.setEndOfContract(supplierDto.getEndOfContract());
+            existingSupplier.setCategory(supplierDto.getCategory());
+            existingSupplier.setCnpj(String.valueOf(supplierDto.getCnpj()));
 
-        Supplier updatedSupplier = supplierRepository.save(existingSupplier);
-        return convertToDto(updatedSupplier);
+            Supplier updatedSupplier = supplierRepository.save(existingSupplier);
+            return convertToDto(updatedSupplier);
+        } catch (DataIntegrityViolationException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid supplier data", e);
+        }
     }
 
     @Override
     public void deleteSupplier(UUID id) {
-        supplierRepository.deleteById(id);
+        try {
+            supplierRepository.deleteById(id);
+        } catch (EmptyResultDataAccessException e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Supplier not found with id: " + id);
+        }
     }
 
     private SupplierDto convertToDto(Supplier supplier) {

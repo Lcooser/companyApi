@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
@@ -13,10 +14,9 @@ import java.util.UUID;
 
 @Getter
 @Setter
+@Entity
 @AllArgsConstructor
 @NoArgsConstructor
-@Entity
-
 public class Supplier {
 
     @Id
@@ -35,5 +35,6 @@ public class Supplier {
     @ManyToMany(mappedBy = "suppliers")
     private List<Company> companies;
 
-
+    @ManyToMany
+    private List<Product> products = new ArrayList<>();
 }

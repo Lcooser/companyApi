@@ -30,8 +30,8 @@ public class Client {
     private String address;
 
 
-    @ManyToMany(mappedBy = "Client")
-    private List<Company> companies;;
+    @ManyToMany(mappedBy = "clients")
+    private List<Company> companies;
 
 
 }

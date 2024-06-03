@@ -6,17 +6,16 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
-
 
 @Getter
 @Setter
 @Entity
 @AllArgsConstructor
 @NoArgsConstructor
-
 public class Product {
 
     @Id
@@ -31,6 +30,8 @@ public class Product {
     private Date updated;
 
     @ManyToMany(mappedBy = "products")
-    private List<Company> companies;
+    private List<Company> companies = new ArrayList<>();
 
+    @ManyToMany(mappedBy = "products")
+    private List<Supplier> suppliers = new ArrayList<>();
 }

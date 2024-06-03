@@ -15,8 +15,6 @@ import java.util.UUID;
 @Entity
 @Getter
 @Setter
-
-
 public class Company {
 
     @Id
@@ -28,7 +26,7 @@ public class Company {
     private String email;
     private String phone;
     private String address;
-    private Date creationDate;;
+    private Date creationDate;
     private String category;
     private boolean isActive;
 
@@ -68,7 +66,3 @@ public class Company {
     private List<Client> clients;
 
 }
-
-
-
-

@@ -1,12 +1,19 @@
 package com.infnet.companyApi.service;
 
+import com.infnet.companyApi.domain.Company;
 import com.infnet.companyApi.domain.Employee;
 import com.infnet.companyApi.dto.EmployeeDto;
+import com.infnet.companyApi.repository.CompanyRepository;
 import com.infnet.companyApi.repository.EmployeeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.EmptyResultDataAccessException;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -15,6 +22,9 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     @Autowired
     private EmployeeRepository employeeRepository;
+
+    @Autowired
+    private CompanyRepository companyRepository;
 
     @Override
     public List<EmployeeDto> getAllEmployees() {
@@ -40,26 +50,40 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     @Override
     public EmployeeDto updateEmployee(UUID id, EmployeeDto employeeDto) {
-        Employee existingEmployee = employeeRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Employee not found with id: " + id));
-        existingEmployee.setName(employeeDto.getName());
-        existingEmployee.setCpf(employeeDto.getCpf());
-        existingEmployee.setEmail(employeeDto.getEmail());
-        existingEmployee.setPhone(employeeDto.getPhone());
-        existingEmployee.setBirthDate(employeeDto.getBirthDate());
-        existingEmployee.setSalary(employeeDto.getSalary());
-        existingEmployee.setAddress(employeeDto.getAddress());
-        existingEmployee.setAddmissionDate(employeeDto.getAddmissionDate());
-        existingEmployee.setDemissionDate(employeeDto.getDemissionDate());
-        existingEmployee.setOccupation(employeeDto.getOccupation());
+        try {
+            Employee existingEmployee = employeeRepository.findById(id)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Employee not found with id: " + id));
+            existingEmployee.setName(employeeDto.getName());
+            existingEmployee.setCpf(employeeDto.getCpf());
+            existingEmployee.setEmail(employeeDto.getEmail());
+            existingEmployee.setPhone(employeeDto.getPhone());
+            existingEmployee.setBirthDate(employeeDto.getBirthDate());
+            existingEmployee.setSalary(employeeDto.getSalary());
+            existingEmployee.setAddress(employeeDto.getAddress());
+            existingEmployee.setAddmissionDate(employeeDto.getAddmissionDate());
+            existingEmployee.setDemissionDate(employeeDto.getDemissionDate());
+            existingEmployee.setOccupation(employeeDto.getOccupation());
+            existingEmployee.setGender(employeeDto.getGender());
 
-        Employee updatedEmployee = employeeRepository.save(existingEmployee);
-        return convertToDto(updatedEmployee);
+            if (employeeDto.getCompanyId() != null) {
+                Optional<Company> company = companyRepository.findById(employeeDto.getCompanyId());
+                company.ifPresent(existingEmployee::setCompany);
+            }
+
+            Employee updatedEmployee = employeeRepository.save(existingEmployee);
+            return convertToDto(updatedEmployee);
+        } catch (DataIntegrityViolationException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid employee data", e);
+        }
     }
 
     @Override
     public void deleteEmployee(UUID id) {
-        employeeRepository.deleteById(id);
+        try {
+            employeeRepository.deleteById(id);
+        } catch (EmptyResultDataAccessException e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Employee not found with id: " + id);
+        }
     }
 
     private EmployeeDto convertToDto(Employee employee) {
@@ -75,6 +99,8 @@ public class EmployeeServiceImpl implements EmployeeService {
         dto.setAddmissionDate(employee.getAddmissionDate());
         dto.setDemissionDate(employee.getDemissionDate());
         dto.setOccupation(employee.getOccupation());
+        dto.setGender(employee.getGender());
+        dto.setCompanyId(employee.getCompany() != null ? employee.getCompany().getId() : null);
 
         return dto;
     }
@@ -92,7 +118,12 @@ public class EmployeeServiceImpl implements EmployeeService {
         employee.setAddmissionDate(dto.getAddmissionDate());
         employee.setDemissionDate(dto.getDemissionDate());
         employee.setOccupation(dto.getOccupation());
+        employee.setGender(dto.getGender());
 
+        if (dto.getCompanyId() != null) {
+            Optional<Company> company = companyRepository.findById(dto.getCompanyId());
+            company.ifPresent(employee::setCompany);
+        }
 
         return employee;
     }

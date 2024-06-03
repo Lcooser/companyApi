@@ -4,7 +4,11 @@ import com.infnet.companyApi.domain.Client;
 import com.infnet.companyApi.dto.ClientDto;
 import com.infnet.companyApi.repository.ClientRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.EmptyResultDataAccessException;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.UUID;
@@ -33,29 +37,41 @@ public class ClientServiceImpl implements ClientService {
 
     @Override
     public ClientDto createClient(ClientDto clientDto) {
-        Client client = convertToEntity(clientDto);
-        Client savedClient = clientRepository.save(client);
-        return convertToDto(savedClient);
+        try {
+            Client client = convertToEntity(clientDto);
+            Client savedClient = clientRepository.save(client);
+            return convertToDto(savedClient);
+        } catch (DataIntegrityViolationException e) {
+            throw new IllegalArgumentException("Invalid customer data", e);
+        }
     }
 
     @Override
     public ClientDto updateClient(UUID id, ClientDto clientDto) {
-        Client existingClient = clientRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Client not found with id: " + id));
-        existingClient.setName(clientDto.getName());
-        existingClient.setAddress(clientDto.getAddress());
-        existingClient.setPhone(clientDto.getPhone());
-        existingClient.setEmail(clientDto.getEmail());
-        existingClient.setCpf(clientDto.getCpf());
-        existingClient.setCnpj(clientDto.getCnpj());
+        try {
+            Client existingClient = clientRepository.findById(id)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Client not found with ID: " + id));
+            existingClient.setName(clientDto.getName());
+            existingClient.setAddress(clientDto.getAddress());
+            existingClient.setPhone(clientDto.getPhone());
+            existingClient.setEmail(clientDto.getEmail());
+            existingClient.setCpf(clientDto.getCpf());
+            existingClient.setCnpj(clientDto.getCnpj());
 
-        Client updatedClient = clientRepository.save(existingClient);
-        return convertToDto(updatedClient);
+            Client updatedClient = clientRepository.save(existingClient);
+            return convertToDto(updatedClient);
+        } catch (DataIntegrityViolationException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid customer data", e);
+        }
     }
 
     @Override
     public void deleteClient(UUID id) {
-        clientRepository.deleteById(id);
+        try {
+            clientRepository.deleteById(id);
+        } catch (EmptyResultDataAccessException e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Client not found with ID: " + id);
+        }
     }
 
     private ClientDto convertToDto(Client client) {

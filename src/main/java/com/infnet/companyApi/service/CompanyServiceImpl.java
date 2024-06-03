@@ -4,7 +4,11 @@ import com.infnet.companyApi.domain.Company;
 import com.infnet.companyApi.dto.CompanyDto;
 import com.infnet.companyApi.repository.CompanyRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.EmptyResultDataAccessException;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.UUID;
@@ -39,22 +43,30 @@ public class CompanyServiceImpl implements CompanyService {
 
     @Override
     public CompanyDto updateCompany(UUID id, CompanyDto companyDto) {
-        Company existingCompany = companyRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Company not found with id: " + id));
-        existingCompany.setName(companyDto.getName());
-        existingCompany.setCnpj(companyDto.getCnpj());
-        existingCompany.setEmail(companyDto.getEmail());
-        existingCompany.setPhone(companyDto.getPhone());
-        existingCompany.setAddress(companyDto.getAddress());
-        existingCompany.setActive(companyDto.isActive());
+        try {
+            Company existingCompany = companyRepository.findById(id)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Company not found with id: " + id));
+            existingCompany.setName(companyDto.getName());
+            existingCompany.setCnpj(companyDto.getCnpj());
+            existingCompany.setEmail(companyDto.getEmail());
+            existingCompany.setPhone(companyDto.getPhone());
+            existingCompany.setAddress(companyDto.getAddress());
+            existingCompany.setActive(companyDto.isActive());
 
-        Company updatedCompany = companyRepository.save(existingCompany);
-        return convertToDto(updatedCompany);
+            Company updatedCompany = companyRepository.save(existingCompany);
+            return convertToDto(updatedCompany);
+        } catch (DataIntegrityViolationException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Company data invalid", e);
+        }
     }
 
     @Override
     public void deleteCompany(UUID id) {
-        companyRepository.deleteById(id);
+        try {
+            companyRepository.deleteById(id);
+        } catch (EmptyResultDataAccessException e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Company not found with id: " + id);
+        }
     }
 
     private CompanyDto convertToDto(Company company) {
@@ -66,6 +78,8 @@ public class CompanyServiceImpl implements CompanyService {
         dto.setPhone(company.getPhone());
         dto.setAddress(company.getAddress());
         dto.setActive(company.isActive());
+        dto.setCategory(company.getCategory());
+        dto.setCreationDate(company.getCreationDate());
 
         return dto;
     }
@@ -79,6 +93,9 @@ public class CompanyServiceImpl implements CompanyService {
         company.setPhone(dto.getPhone());
         company.setAddress(dto.getAddress());
         company.setActive(dto.isActive());
+        company.setCreationDate(dto.getCreationDate());
+        company.setCategory(dto.getCategory());
+        company.setCreationDate(dto.getCreationDate());
 
         return company;
     }
