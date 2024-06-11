@@ -1,12 +1,12 @@
 package com.infnet.companyApi.dto;
 
+
 import lombok.Getter;
 import lombok.Setter;
 
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.Pattern;
-import javax.validation.constraints.Size;
+import javax.validation.constraints.NotNull;
 import java.util.UUID;
 
 @Getter
@@ -15,25 +15,21 @@ public class ClientDto {
 
     private UUID id;
 
-    @NotBlank(message = "Name is required")
+    @NotBlank(message = "Name is mandatory")
     private String name;
 
-    @Pattern(regexp = "[0-9]{14}", message = "CNPJ must have 14 digits")
+    @NotBlank(message = "CNPJ is mandatory")
     private String cnpj;
 
-    @Pattern(regexp = "[0-9]{11}", message = "CPF must have 11 digits")
+    @NotBlank(message = "CPF is mandatory")
     private String cpf;
 
-    @NotBlank(message = "Email is required")
-    @Email(message = "Invalid email format")
+    @Email(message = "Email should be valid")
     private String email;
 
-    @NotBlank(message = "Phone is required")
-    @Size(min = 10, max = 14, message = "Phone number must be between 10 and 14 digits")
+    @NotBlank(message = "Phone is mandatory")
     private String phone;
 
-    @NotBlank(message = "Address is required")
+    @NotBlank(message = "Address is mandatory")
     private String address;
-
-
 }

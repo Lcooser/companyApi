@@ -1,6 +1,5 @@
 package com.infnet.companyApi.controller;
 
-
 import com.infnet.companyApi.dto.ClientDto;
 import com.infnet.companyApi.service.ClientService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,6 +37,7 @@ public class ClientController {
     }
 
     @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
     public ResponseEntity<ClientDto> createClient(@Valid @RequestBody ClientDto clientDto, BindingResult bindingResult) {
         if (bindingResult.hasErrors()) {
             return ResponseEntity.badRequest().body(null);

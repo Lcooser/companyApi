@@ -3,6 +3,7 @@ package com.infnet.companyApi.controller;
 import com.infnet.companyApi.dto.CompanyDto;
 import com.infnet.companyApi.service.CompanyService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
@@ -36,13 +37,14 @@ public class CompanyController {
     }
 
     @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
     public ResponseEntity<CompanyDto> createCompany(@Valid @RequestBody CompanyDto companyDto, BindingResult bindingResult) {
         if (bindingResult.hasErrors()) {
             return ResponseEntity.badRequest().body(null);
         }
 
         CompanyDto createdCompany = companyService.createCompany(companyDto);
-        return ResponseEntity.ok(createdCompany);
+        return ResponseEntity.status(HttpStatus.CREATED).body(createdCompany);
     }
 
     @PutMapping("/{id}")
